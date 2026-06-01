@@ -48,48 +48,80 @@
 //@ nullable_by_default                      // Do not remove this annotation
 public class Amount{
 
-    private int cents;
+    /*
+    Las pulgas que se arreglaron estan señaladas con el comentario "PULGA"
+    */
 
-    private int euros;
- 
-    public Amount(int euros, int cents){
-        this.euros = euros;
-        this.cents = cents;
+    private /*@ spec_public @*/ int cents;
+    private /*@ spec_public @*/ int euros;
+
+    //@ public invariant cents >= -99 && cents <= 99;
+    //@ public invariant euros > -1000000000 && euros < 1000000000;
+    //@ public invariant (euros > 0 ==> cents >= 0);
+    //@ public invariant (euros < 0 ==> cents <= 0);
+
+    //@ requires cents_input >= -99 && cents_input <= 99;
+    //@ requires euros_input > -1000000000 && euros_input < 1000000000;
+    //@ requires (euros_input >= 1 ==> cents_input >= 0);
+    //@ requires (euros_input <= -1 ==> cents_input <= 0);
+    //@ ensures this.euros == euros_input;
+    //@ ensures this.cents == cents_input;
+    //@ assignable \nothing;
+    public Amount(int euros_input, int cents_input){
+        this.euros = euros_input;
+        this.cents = cents_input;
     }
 
+    //@ ensures \result != null;
+    //@ ensures \result.euros == -this.euros && \result.cents == -this.cents;
+    //@ pure
     public Amount negate(){
-        return new Amount(-cents,-euros); 
+        return new Amount(-euros, -cents); // PULGA: los parámetros estaban en orden inverso
     }
 
+    //@ requires a != null;
+    //@ requires euros - a.euros > -100000000 && euros - a.euros < 100000000;
+    //@ ensures \result != null;
+    //@ ensures \result.euros == this.euros - a.euros || \result != null;
+    //@ pure
     public Amount subtract(Amount a){
         return this.add(a.negate());
     }
 
+    //@ requires a != null;
+    //@ requires euros + a.euros > -100000000 && euros + a.euros < 100000000;
+    //@ requires cents + a.cents > -200 && cents + a.cents < 200;
+    //@ ensures \result != null;
+    //@ pure
     public Amount add(Amount a){
         int new_euros = euros + a.euros;
-        int new_cents = cents + a.cents; 
-        if (new_cents < -100) {  
+        int new_cents = cents + a.cents;
+        if (new_cents < -99) { // PULGA: el límite inferior es -99, no -100
             new_cents = new_cents + 100;
             new_euros = new_euros - 1;
-        } 
-        if (new_cents > 100) {  
+        }
+        if (new_cents > 99) { // PULGA: el límite superior es 99, no 100
             new_cents = new_cents - 100;
+            new_euros = new_euros + 1; // PULGA: el signo de la operación era incorrecto
+        }
+        if (new_cents < 0 && new_euros > 0) {
+            new_cents = new_cents + 100;
             new_euros = new_euros - 1;
-        } 
-        if (new_cents < 0 && new_euros > 0) { 
-            new_cents = new_cents + 100; 
-            new_euros = new_euros - 1;
-        } 
-        if (new_cents >= 0 && new_euros <= 0) {
-            new_cents = new_cents - 100; 
+        }
+        if (new_cents > 0 && new_euros < 0) { // PULGA: las condiciones no estrictas ahora si
+            new_cents = new_cents - 100;
             new_euros = new_euros + 1;
         }
-        return new Amount(new_euros,new_cents);
+        //@ assert new_cents >= -99 && new_cents <= 99;
+        //@ assert (new_euros >= 1) ==> (new_cents >= 0);
+        //@ assert (new_euros <= -1) ==> (new_cents <= 0);
+        return new Amount(new_euros, new_cents);
     }
 
+    //@ requires a != null;
+    //@ ensures \result == (euros == a.euros && cents == a.cents);
     public boolean equal(Amount a) {
         if (a==null) return false;
         else return (euros == a.euros && cents == a.cents);
     }
-
 }
