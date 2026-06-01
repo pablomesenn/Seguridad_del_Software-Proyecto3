@@ -45,7 +45,7 @@ El código es correcto para los usos habituales dentro de los límites declarado
 
 ## 2. Sugerencias de mejora para OpenJML y JML
 
-### Para OpenJML (la herramienta)
+### Para OpenJML
 
 Durante esta práctica no fue posible especificar correctamente algunas propiedades relacionadas con el conteo de elementos porque `OpenJML` no soporta completamente `\num_of` en su proceso de verificación. Mejorar este soporte permitiría escribir especificaciones más precisas y detectar más errores lógicos.
 
